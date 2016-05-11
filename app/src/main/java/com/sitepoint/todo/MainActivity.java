@@ -1,7 +1,9 @@
 package com.sitepoint.todo;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -96,22 +98,53 @@ public class MainActivity extends AppCompatActivity {
 
         // Delete items when clicked
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                new Firebase(itemsUrl)
-                        .orderByChild("title")
-                        .equalTo((String) listView.getItemAtPosition(position))
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                if (dataSnapshot.hasChildren()) {
-                                    DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
-                                    firstChild.getRef().removeValue();
-                                }
-                            }
+            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
 
-                            public void onCancelled(FirebaseError firebaseError) {
-                            }
-                        });
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+
+                builder.setTitle("Confirm");
+                builder.setMessage("Are you sure you want to delete ?");
+
+                builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        new Firebase(itemsUrl)
+                                .orderByChild("title")
+                                .equalTo((String) listView.getItemAtPosition(position))
+                                .addListenerForSingleValueEvent(new ValueEventListener() {
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        if (dataSnapshot.hasChildren()) {
+                                            DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
+                                            firstChild.getRef().removeValue();
+                                        }
+                                    }
+
+                                    public void onCancelled(FirebaseError firebaseError) {
+                                    }
+                                });
+                        dialog.dismiss();
+                    }
+
+                });
+
+                builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                        dialog.dismiss();
+                    }
+                });
+
+                AlertDialog alert = builder.create();
+                alert.show();
+
+
+
             }
+
         });
     }
 
